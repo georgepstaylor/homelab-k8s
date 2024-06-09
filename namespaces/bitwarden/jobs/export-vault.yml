@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: export-vault
+spec:
+  # schedule every day at 3am
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: bitwarden-export
+            image: ghcr.io/georgepstaylor/bitwarden-cli-container:2024.4.1
+            command: ["bash"]
+            args:
+              - -c
+              - |
+                bw login && \
+                bw unlock --passwordenv BW_MASTER_PASSWORD && \
+                bw export --format json --output vault.json
+            envFrom:
+            - secretRef:
+                name: bitwarden-master-password
+          restartPolicy: OnFailure
